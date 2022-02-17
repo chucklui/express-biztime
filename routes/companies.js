@@ -19,7 +19,7 @@ router.get('/', async function (req, res, next) {
     return res.json({ companies });
 });
 
-/** Queries single company with code pk in companies table,
+/** Queries single company with related invoices in companies table,
  *  returns record or 404 
  * {company: {code, name, description}}
  */
@@ -35,7 +35,19 @@ router.get('/:code', async function (req, res, next) {
     if (result.rows.length === 0) {
         throw new NotFoundError("Company not found");
     }
+
     const company = result.rows[0];
+
+    const invoiceResults = await db.query(
+        `SELECT id 
+            FROM invoices
+            WHERE comp_code=$1
+            ORDER BY id`,
+        [code]
+    );
+
+    company.invoices = invoiceResults.rows.map(i => i.id);
+
     return res.json({ company });
 });
 
