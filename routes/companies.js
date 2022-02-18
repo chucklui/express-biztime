@@ -21,7 +21,7 @@ router.get('/', async function (req, res, next) {
 
 /** Queries single company with related invoices in companies table,
  *  returns record or 404 
- * {company: {code, name, description}}
+ * {company: {code, name, description, invoices}}
  */
 
 router.get('/:code', async function (req, res, next) {
