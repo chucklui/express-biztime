@@ -11,31 +11,30 @@ let invoice;
 //[{}]
 
 beforeEach(async function () {
-    let companyResult = await db.query(
+    const companyResult = await db.query(
         `INSERT INTO companies (code, name, description)
             VALUES ('amzn', 'Amazon', 'Ecommerce')
             RETURNING code, name , description`);
     company = companyResult.rows[0];
 
-    let invoiceResult = await db.query(
+    const invoiceResult = await db.query(
         `INSERT INTO invoices (comp_code, amt)
             VALUES ('amzn', 999)
             RETURNING id, comp_code, amt, paid, add_date, paid_date`);
     invoice = invoiceResult.rows[0];
 });
-console.log(company);
+
 
 afterEach(async function () {
     await db.query(`TRUNCATE invoices, companies CASCADE`);
 });
 
-/**this test should list all the company from companies table */
 describe("GET /companies", function () {
     it("Gets a list of company from companies", async function () {
         const resp = await request(app).get(`/companies`);
 
         expect(resp.body).toEqual({
-            "companies": [{
+            companies: [{
                 code: 'amzn',
                 name: 'Amazon'
             }]
@@ -52,7 +51,7 @@ describe("GET /companies/:code", function () {
                 code: 'amzn',
                 name: 'Amazon',
                 description: 'Ecommerce',
-                invoices: [expect.any(Number)]
+                invoices: [invoice.id]
             }
         });
     });
@@ -60,7 +59,7 @@ describe("GET /companies/:code", function () {
     it("Throws error on invalid code", async function () {
         const resp = await request(app).get(`/companies/aapl`);
         expect(resp.statusCode).toEqual(404);
-    })
+    });
 });
 
 describe("POST /companies/", function () {
@@ -120,6 +119,7 @@ describe("DELETE /companies/:code", function () {
             .delete('/companies/amzn');
 
         expect(resp.statusCode).toEqual(200);
+        //check if it is in the db
         expect(resp.body).toEqual({ status: "deleted" });
     });
     it("Throws error on invalid code", async function () {
